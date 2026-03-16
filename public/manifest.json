@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Aha Flow",
+  "version": "0.1.0",
+  "description": "Context mesh and local-first memory for AI web chats.",
+  "action": {
+    "default_title": "Aha Flow"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*",
+    "https://gemini.google.com/*",
+    "https://kimi.moonshot.cn/*",
+    "https://kimi.ai/*",
+    "https://kimi.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*",
+        "https://kimi.moonshot.cn/*",
+        "https://kimi.ai/*",
+        "https://kimi.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
