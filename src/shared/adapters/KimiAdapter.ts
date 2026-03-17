@@ -1,5 +1,5 @@
 import { BaseSiteAdapter } from './BaseSiteAdapter';
-import type { ChatMessage, ChatSource } from './types';
+import type { ChatElement, ChatMessage, ChatSource } from './types';
 
 export class KimiAdapter extends BaseSiteAdapter {
   getSource(): ChatSource {
@@ -44,5 +44,25 @@ export class KimiAdapter extends BaseSiteAdapter {
       .filter((msg) => msg.content.length > 0);
 
     return messages;
+  }
+
+  getChatMessageElements(): ChatElement[] {
+    const listItems = this.pickBySelectors([
+      'main [role="listitem"]',
+      'main article',
+      'main [data-message-author-role]'
+    ]);
+
+    return listItems
+      .map((node) => {
+        const roleAttr = node.getAttribute('data-message-author-role');
+        const aria = node.getAttribute('aria-label') || '';
+        let role: ChatElement['role'] = 'assistant';
+        if (roleAttr === 'user' || /you|user|你/i.test(aria)) role = 'user';
+        if (/assistant|kimi|model/i.test(aria)) role = 'assistant';
+        const content = this.getTextFromNode(node);
+        return { role, content, element: node };
+      })
+      .filter((msg) => msg.content.length > 0);
   }
 }

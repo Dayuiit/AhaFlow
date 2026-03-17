@@ -1,5 +1,5 @@
 import { BaseSiteAdapter } from './BaseSiteAdapter';
-import type { ChatMessage, ChatSource } from './types';
+import type { ChatElement, ChatMessage, ChatSource } from './types';
 
 export class ChatGPTAdapter extends BaseSiteAdapter {
   getSource(): ChatSource {
@@ -22,6 +22,28 @@ export class ChatGPTAdapter extends BaseSiteAdapter {
 
   getChatContainer(): Element | null {
     return document.querySelector('main');
+  }
+
+  getChatMessageElements(): ChatElement[] {
+    const nodes = Array.from(document.querySelectorAll('[data-message-author-role]'));
+    if (nodes.length > 0) {
+      return nodes.map((node) => {
+        const role = (node.getAttribute('data-message-author-role') || 'assistant') as
+          | 'user'
+          | 'assistant'
+          | 'system';
+        return { role, content: this.getTextFromNode(node), element: node };
+      });
+    }
+
+    const articles = Array.from(document.querySelectorAll('main article'));
+    return articles
+      .map((node) => ({
+        role: 'assistant' as const,
+        content: this.getTextFromNode(node),
+        element: node
+      }))
+      .filter((msg) => msg.content.length > 0);
   }
 
   getChatHistory(): ChatMessage[] {

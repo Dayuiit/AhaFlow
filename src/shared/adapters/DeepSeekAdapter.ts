@@ -1,9 +1,9 @@
 import { BaseSiteAdapter } from './BaseSiteAdapter';
 import type { ChatElement, ChatMessage, ChatSource } from './types';
 
-export class GeminiAdapter extends BaseSiteAdapter {
+export class DeepSeekAdapter extends BaseSiteAdapter {
   getSource(): ChatSource {
-    return 'Gemini';
+    return 'DeepSeek';
   }
 
   getQueryInput(): HTMLElement | null {
@@ -14,7 +14,7 @@ export class GeminiAdapter extends BaseSiteAdapter {
       .map((el) => el as HTMLElement)
       .find((el) => {
         const label = el.getAttribute('aria-label') || '';
-        return /message|prompt|send|输入|消息/i.test(label);
+        return /message|prompt|send|输入|消息|提问/i.test(label);
       });
 
     return editable || null;
@@ -28,38 +28,38 @@ export class GeminiAdapter extends BaseSiteAdapter {
     const listItems = this.pickBySelectors([
       'main [role="listitem"]',
       'main article',
-      'main [data-message-author-role]'
+      'main [data-message-author-role]',
+      'main [data-role]'
     ]);
 
-    const messages = listItems
+    return listItems
       .map((node) => {
-        const roleAttr = node.getAttribute('data-message-author-role');
+        const roleAttr = node.getAttribute('data-message-author-role') || node.getAttribute('data-role');
         const aria = node.getAttribute('aria-label') || '';
         let role: ChatMessage['role'] = 'assistant';
-        if (roleAttr === 'user' || /you|user|你/i.test(aria)) role = 'user';
-        if (/assistant|gemini|model/i.test(aria)) role = 'assistant';
+        if (roleAttr === 'user' || /you|user|你|我/i.test(aria)) role = 'user';
+        if (roleAttr === 'assistant' || roleAttr === 'ai' || /assistant|deepseek|model/i.test(aria)) role = 'assistant';
         const content = this.getTextFromNode(node);
         return { role, content };
       })
       .filter((msg) => msg.content.length > 0);
-
-    return messages;
   }
 
   getChatMessageElements(): ChatElement[] {
     const listItems = this.pickBySelectors([
       'main [role="listitem"]',
       'main article',
-      'main [data-message-author-role]'
+      'main [data-message-author-role]',
+      'main [data-role]'
     ]);
 
     return listItems
       .map((node) => {
-        const roleAttr = node.getAttribute('data-message-author-role');
+        const roleAttr = node.getAttribute('data-message-author-role') || node.getAttribute('data-role');
         const aria = node.getAttribute('aria-label') || '';
         let role: ChatElement['role'] = 'assistant';
-        if (roleAttr === 'user' || /you|user|你/i.test(aria)) role = 'user';
-        if (/assistant|gemini|model/i.test(aria)) role = 'assistant';
+        if (roleAttr === 'user' || /you|user|你|我/i.test(aria)) role = 'user';
+        if (roleAttr === 'assistant' || roleAttr === 'ai' || /assistant|deepseek|model/i.test(aria)) role = 'assistant';
         const content = this.getTextFromNode(node);
         return { role, content, element: node };
       })

@@ -17,6 +17,8 @@ export type I18nKey =
   | 'actionFocusDesc'
   | 'actionLanguage'
   | 'actionLanguageDesc'
+  | 'rolePrompts'
+  | 'roleEmpty'
   | 'justNow'
   | 'minutesAgo'
   | 'quote'
@@ -30,6 +32,12 @@ export type I18nKey =
   | 'managePersonas'
   | 'openSettings'
   | 'addPersona'
+  | 'add'
+  | 'update'
+  | 'edit'
+  | 'moveTop'
+  | 'moveUp'
+  | 'moveDown'
   | 'remove'
   | 'namePlaceholder'
   | 'promptPlaceholder'
@@ -64,6 +72,8 @@ const ZH: Dict = {
   actionFocusDesc: '一键隐藏干扰元素，保留对话核心',
   actionLanguage: '切换语言',
   actionLanguageDesc: '在中英文界面间快速切换',
+  rolePrompts: '预设角色',
+  roleEmpty: '暂无角色，可在设置中添加。',
   justNow: '刚刚',
   minutesAgo: '分钟前',
   quote: '引用',
@@ -77,6 +87,12 @@ const ZH: Dict = {
   managePersonas: '角色管理',
   openSettings: '打开设置以新增角色。',
   addPersona: '添加角色',
+  add: '添加',
+  update: '更新',
+  edit: '编辑',
+  moveTop: '置顶',
+  moveUp: '上移',
+  moveDown: '下移',
   remove: '移除',
   namePlaceholder: '角色名称',
   promptPlaceholder: '角色提示词',
@@ -110,6 +126,8 @@ const EN: Dict = {
   actionFocusDesc: 'Hide distractions and keep the core conversation',
   actionLanguage: 'Switch Language',
   actionLanguageDesc: 'Toggle between Chinese and English UI',
+  rolePrompts: 'Role Prompts',
+  roleEmpty: 'No personas yet. Add in settings.',
   justNow: 'Just now',
   minutesAgo: 'min ago',
   quote: 'Quote',
@@ -123,6 +141,12 @@ const EN: Dict = {
   managePersonas: 'Persona Manager',
   openSettings: 'Open settings to add personas.',
   addPersona: 'Add Persona',
+  add: 'Add',
+  update: 'Update',
+  edit: 'Edit',
+  moveTop: 'Pin to Top',
+  moveUp: 'Move Up',
+  moveDown: 'Move Down',
   remove: 'Remove',
   namePlaceholder: 'Persona name',
   promptPlaceholder: 'Persona prompt',

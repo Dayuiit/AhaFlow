@@ -1,9 +1,10 @@
-import type { ChatMessage, ChatSource } from './types';
+import type { ChatElement, ChatMessage, ChatSource } from './types';
 
 export abstract class BaseSiteAdapter {
   abstract getSource(): ChatSource;
   abstract getQueryInput(): HTMLElement | null;
   abstract getChatHistory(): ChatMessage[];
+  abstract getChatMessageElements(): ChatElement[];
   abstract getChatContainer(): Element | null;
 
   getSessionId(): string {

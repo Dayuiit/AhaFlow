@@ -16,7 +16,14 @@
     "https://gemini.google.com/*",
     "https://kimi.moonshot.cn/*",
     "https://kimi.ai/*",
-    "https://kimi.com/*"
+    "https://kimi.com/*",
+    "https://*.qwen.ai/*",
+    "https://tongyi.aliyun.com/*",
+    "https://qwen.aliyun.com/*",
+    "https://doubao.com/*",
+    "https://www.doubao.com/*",
+    "https://deepseek.com/*",
+    "https://chat.deepseek.com/*"
   ],
   "content_scripts": [
     {
@@ -26,7 +33,14 @@
         "https://gemini.google.com/*",
         "https://kimi.moonshot.cn/*",
         "https://kimi.ai/*",
-        "https://kimi.com/*"
+        "https://kimi.com/*",
+        "https://*.qwen.ai/*",
+        "https://tongyi.aliyun.com/*",
+        "https://qwen.aliyun.com/*",
+        "https://doubao.com/*",
+        "https://www.doubao.com/*",
+        "https://deepseek.com/*",
+        "https://chat.deepseek.com/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
