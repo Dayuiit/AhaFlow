@@ -663,7 +663,7 @@ export const sidebarStyles = `
   top: 50%;
   transform: translateY(-50%);
   width: 40px;
-  height: 60vh;
+  height: 80vh;
   min-height: 440px;
   background: var(--sidebar-bg);
   backdrop-filter: blur(20px);
@@ -746,7 +746,6 @@ export const sidebarStyles = `
   align-items: center;
   position: relative;
   margin-top: 10px;
-  overflow: hidden;
 }
 
 .fluid-track-scroll {
@@ -755,15 +754,9 @@ export const sidebarStyles = `
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow-y: auto;
-  overflow-x: visible;
-  padding: 4px 0 6px;
-  scrollbar-width: none;
-}
-
-.fluid-track-scroll::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  overflow: visible;
+  padding: 0;
+  will-change: transform;
 }
 
 .fluid-node {
@@ -773,8 +766,7 @@ export const sidebarStyles = `
   justify-content: center;
   width: 100%;
   flex: var(--base-weight);
-  min-height: 28px;
-  padding: 2px 0;
+  min-height: 22px;
   position: relative;
   cursor: pointer;
 }
@@ -801,10 +793,10 @@ export const sidebarStyles = `
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 8px;
-  margin: 6px 0;
+  margin: 4px 0;
   z-index: 2;
   border: 1.5px solid var(--dot-border);
   transition: var(--spring-morph);
@@ -822,17 +814,18 @@ export const sidebarStyles = `
   color: var(--color-ai);
 }
 
-.fluid-track.is-hovering .fluid-node .dot {
+.fluid-track:hover .fluid-node .dot {
   opacity: 0.2;
   filter: brightness(0.6);
   box-shadow: none;
 }
 
-.fluid-track.is-hovering .fluid-line {
+.fluid-track:hover .fluid-line {
   opacity: 0.1;
 }
 
-.fluid-node.is-near .dot {
+.fluid-track:hover .fluid-node:has(+ .fluid-node:hover) .dot,
+.fluid-track:hover .fluid-node:hover + .fluid-node .dot {
   height: 14px;
   border-radius: 999px;
   opacity: 0.7;
@@ -841,7 +834,7 @@ export const sidebarStyles = `
   filter: brightness(1.1);
 }
 
-.fluid-node.is-active .dot {
+.fluid-track:hover .fluid-node:hover .dot {
   height: 24px;
   border-radius: 999px;
   transform: scale(1.25);
@@ -850,6 +843,13 @@ export const sidebarStyles = `
   box-shadow: 0 0 16px currentColor, 0 0 32px currentColor;
   filter: brightness(1.6) saturate(1.2);
   z-index: 10;
+}
+
+.fluid-node.is-selected .dot {
+  opacity: 1;
+  border-color: rgba(255,255,255,0.7);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.55), 0 0 10px currentColor, 0 0 18px currentColor;
+  filter: brightness(1.2);
 }
 
 .peek {
@@ -901,23 +901,11 @@ export const sidebarStyles = `
   color: var(--text-sub);
 }
 
-.timeline-peek {
-  position: fixed;
-  transform: translate(-100%, -50%);
-  background: var(--peek-card-bg);
-  backdrop-filter: blur(15px);
-  border: 1px solid var(--peek-card-border);
-  border-radius: 18px;
-  padding: 16px 18px;
-  width: 260px;
-  max-width: 320px;
-  font-size: 14px;
-  pointer-events: none;
-  transition: var(--spring-morph);
-  box-shadow: var(--peek-card-shadow);
-  color: var(--text-main);
-  z-index: 10000000;
-  line-height: 1.5;
+
+.timeline-peek[data-debug='true'] {
+  outline: 2px solid #ffda00;
+  box-shadow: 0 0 0 2px rgba(255,218,0,0.3), var(--peek-card-shadow);
+  background: rgba(255, 218, 0, 0.08);
 }
 
 /* =========================================
@@ -999,28 +987,28 @@ export const sidebarStyles = `
 
 .aha-role-menu {
   position: absolute;
-  left: -46px;
-  bottom: 56px;
+  left: 44px;
+  bottom: -2px;
   width: 220px;
-  background: var(--pill-menu-bg);
+  background: color-mix(in srgb, var(--pill-menu-bg) 92%, transparent);
   backdrop-filter: blur(30px) saturate(200%);
   border: 1px solid var(--pill-menu-border);
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   opacity: 0;
-  transform: translateY(10px) scale(0.95);
+  transform: translateX(-6px);
   pointer-events: none;
-  transition: var(--spring-pop);
-  transform-origin: bottom left;
+  transition: all 0.2s linear;
+  transform-origin: left center;
 }
 
 .aha-pill-anchor.menu-open .aha-role-menu {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateX(0);
   pointer-events: auto;
 }
 

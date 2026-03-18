@@ -121,25 +121,26 @@ function Sidebar() {
   const [summaries, setSummaries] = useState<MeshSummary | null>(null);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [prefs, setPrefs] = useState<Prefs>(defaultPrefs);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [activeView, setActiveView] = useState<'flow' | 'actions'>('flow');
   const [toast, setToast] = useState<string>('');
   const [showSettings, setShowSettings] = useState(false);
   const [personaName, setPersonaName] = useState('');
   const [personaPrompt, setPersonaPrompt] = useState('');
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [isTrackHovering, setIsTrackHovering] = useState(false);
-  const [peekItem, setPeekItem] = useState<TimelineItem | null>(null);
-  const [peekPos, setPeekPos] = useState<{ top: number; left: number } | null>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
   const [pillVisible, setPillVisible] = useState(false);
   const [pillOpen, setPillOpen] = useState(false);
+  const [pillPinned, setPillPinned] = useState(false);
   const [pillPos, setPillPos] = useState({ left: 0, top: 0 });
   const [editingPersonaId, setEditingPersonaId] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const debugPeek = false;
   const toastTimer = useRef<number | null>(null);
   const pillRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
-  const nodeRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const dict = getDictionary(prefs.language);
   const t = (key: keyof typeof dict) => dict[key];
@@ -210,21 +211,6 @@ function Sidebar() {
     };
   }, [adapter, personas]);
 
-  useEffect(() => {
-    if (hoveredIndex === null) {
-      setPeekItem(null);
-      return;
-    }
-    const node = nodeRefs.current[hoveredIndex];
-    const sidebar = sidebarRef.current;
-    if (!node || !sidebar) return;
-    const rect = node.getBoundingClientRect();
-    const sidebarRect = sidebar.getBoundingClientRect();
-    const top = rect.top + rect.height / 2;
-    const left = sidebarRect.left - 16;
-    setPeekPos({ top, left });
-    setPeekItem(timeline[hoveredIndex] || null);
-  }, [hoveredIndex, timeline]);
 
   useEffect(() => {
     if (!adapter) return;
@@ -259,6 +245,7 @@ function Sidebar() {
     const handleGlobalMouseDown = (event: MouseEvent) => {
       if (pillRef.current && pillRef.current.contains(event.target as Node)) return;
       setPillOpen(false);
+      setPillPinned(false);
     };
 
     const handleViewportUpdate = () => {
@@ -280,12 +267,34 @@ function Sidebar() {
     };
   }, [adapter, pillOpen, pillVisible]);
 
+  useEffect(() => {
+    setScrollOffset((prev) => clampScroll(prev));
+  }, [timeline.length]);
+
   if (!adapter) return null;
 
   const showToast = (message: string) => {
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     setToast(message);
     toastTimer.current = window.setTimeout(() => setToast(''), 2500);
+  };
+
+  const updatePeekFromIndex = (index: number, target?: HTMLElement | null) => {
+    const node = target || nodeRefs.current[index];
+    const sidebar = sidebarRef.current;
+    if (!node || !sidebar) return;
+    const rect = node.getBoundingClientRect();
+    const sidebarRect = sidebar.getBoundingClientRect();
+    const top = rect.top + rect.height / 2;
+    const left = sidebarRect.left - 16;
+    const tooltipWidth = 260;
+    const margin = 12;
+    const maxLeft = window.innerWidth - margin;
+    const minLeft = tooltipWidth + margin;
+    const clampedLeft = Math.min(Math.max(left, minLeft), maxLeft);
+    const clampedTop = Math.min(Math.max(top, margin), window.innerHeight - margin);
+    setPeekPos({ top: clampedTop, left: clampedLeft });
+    setPeekItem(timeline[index] || null);
   };
 
   const resetPersonaEditor = () => {
@@ -420,6 +429,42 @@ function Sidebar() {
   }, [summaries]);
 
   const showPill = pillVisible || pillOpen;
+
+  const clampScroll = (offset: number) => {
+    const track = trackRef.current;
+    const scroll = scrollRef.current;
+    if (!track || !scroll) return 0;
+    const max = Math.max(0, scroll.scrollHeight - track.clientHeight);
+    return Math.min(Math.max(0, offset), max);
+  };
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        ticking = false;
+        if (timeline.length === 0) return;
+        let bestIndex = 0;
+        let bestDistance = Number.POSITIVE_INFINITY;
+        for (let i = 0; i < timeline.length; i++) {
+          const el = timeline[i].element as HTMLElement;
+          if (!el) continue;
+          const rect = el.getBoundingClientRect();
+          const distance = Math.abs(rect.top);
+          if (rect.top <= 120 && distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = i;
+          }
+        }
+        setSelectedIndex(bestIndex);
+      });
+    };
+    window.addEventListener('scroll', handleScroll, true);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [timeline]);
 
   const renderPinIcon = (text: string) => {
     const type = tagType(text);
@@ -704,6 +749,12 @@ function Sidebar() {
           ref={sidebarRef}
           className="ahaflow-sidebar"
           onClick={() => setIsOpen(true)}
+            onMouseLeave={() => {
+              setIsTrackHovering(false);
+              setHoveredIndex(null);
+              setPeekItem(null);
+              setPeekPos(null);
+            }}
           role="button"
           tabIndex={0}
           onKeyDown={(event) => {
@@ -733,52 +784,53 @@ function Sidebar() {
           </div>
 
           <div
-            className={`fluid-track ${isTrackHovering ? 'is-hovering' : ''}`}
-            onMouseEnter={() => setIsTrackHovering(true)}
-            onMouseLeave={() => {
-              setIsTrackHovering(false);
-              setHoveredIndex(null);
-            }}
-            onMouseMove={(event) => {
-              const target = (event.target as HTMLElement).closest('.fluid-node') as HTMLElement | null;
-              if (!target) return;
-              const index = Number(target.dataset.index);
-              if (!Number.isNaN(index)) setHoveredIndex(index);
+            className="fluid-track"
+            ref={trackRef}
+            onWheel={(event) => {
+              const track = trackRef.current;
+              const scroll = scrollRef.current;
+              if (!track || !scroll) return;
+              const max = Math.max(0, scroll.scrollHeight - track.clientHeight);
+              if (max <= 0) return;
+              const next = clampScroll(scrollOffset + event.deltaY);
+              const willScroll = next !== scrollOffset;
+              if (willScroll) {
+                event.preventDefault();
+                setScrollOffset(next);
+              }
             }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="fluid-track-scroll">
+            <div
+              className="fluid-track-scroll"
+              ref={scrollRef}
+              style={{ transform: `translateY(-${scrollOffset}px)` }}
+            >
               {timeline.map((item, idx) => {
-                const isActive = isTrackHovering && hoveredIndex === idx;
-                const isNear =
-                  isTrackHovering && hoveredIndex !== null && Math.abs(hoveredIndex - idx) === 1;
                 return (
                 <div
-                  className={`fluid-node ${isActive ? 'is-active' : ''} ${isNear ? 'is-near' : ''}`}
+                  className={`fluid-node ${selectedIndex === idx ? 'is-selected' : ''}`}
                   key={item.id}
                   data-index={idx}
                   style={{ ['--base-weight' as any]: item.weight }}
-                  onClick={() => item.element.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                  ref={(el) => {
-                    nodeRefs.current[idx] = el;
+                  onClick={() => {
+                    setSelectedIndex(idx);
+                    item.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
                 >
                   <div className={`dot ${item.role === 'user' ? 'user' : 'ai'}`} />
+                  <div className="peek">
+                    <div className="peek-meta">
+                      <div className="peek-source">{item.role === 'user' ? 'USER' : 'AI'}</div>
+                    </div>
+                    "{snippet(item.content)}"
+                  </div>
                   <div className="fluid-line" />
                 </div>
                 );
               })}
             </div>
           </div>
-
-          {peekItem && peekPos ? (
-            <div className="timeline-peek" style={{ top: `${peekPos.top}px`, left: `${peekPos.left}px` }}>
-              <div className="peek-meta">
-                <div className="peek-source">{peekItem.role === 'user' ? 'USER' : 'AI'}</div>
-              </div>
-              "{snippet(peekItem.content)}"
-            </div>
-          ) : null}
         </div>
       </div>
 
@@ -786,12 +838,19 @@ function Sidebar() {
         ref={pillRef}
         className={`aha-pill-anchor ${showPill ? 'is-visible' : ''} ${pillOpen ? 'menu-open' : ''}`}
         style={{ left: `${pillPos.left}px`, top: `${pillPos.top}px` }}
+        onMouseEnter={() => {
+          if (!pillPinned) setPillOpen(true);
+        }}
+        onMouseLeave={() => {
+          if (!pillPinned) setPillOpen(false);
+        }}
       >
         <div
           className="aha-pill-trigger"
           onMouseDown={(event) => {
             event.preventDefault();
-            setPillOpen((prev) => !prev);
+            setPillOpen(true);
+            setPillPinned(true);
             setPillVisible(true);
           }}
           title={t('rolePrompts')}
@@ -813,6 +872,7 @@ function Sidebar() {
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
                   setPillOpen(false);
+                  setPillPinned(false);
                   appendText(adapter, persona.prompt);
                   focusInputEnd();
                   flashInput();
@@ -826,7 +886,6 @@ function Sidebar() {
                 </div>
                 <div className="aha-role-info">
                   <span className="aha-role-title">{persona.name}</span>
-                  <span className="aha-role-desc">{snippet(persona.prompt, 24)}</span>
                 </div>
               </div>
             ))
