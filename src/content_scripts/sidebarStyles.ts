@@ -5,6 +5,15 @@ export const sidebarStyles = `
 
 .aha-root {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.74) 0%, rgba(245, 248, 255, 0.42) 100%);
+  --glass-bg-strong: linear-gradient(135deg, rgba(255, 255, 255, 0.86) 0%, rgba(250, 252, 255, 0.58) 100%);
+  --glass-border: rgba(255, 255, 255, 0.88);
+  --glass-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.045),
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    inset 0 1px 1px rgba(255, 255, 255, 1),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.32);
+  --glass-highlight: linear-gradient(105deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.12) 24%, rgba(255,255,255,0) 42%);
   --bg-glass: rgba(255, 255, 255, 0.65);
   --bg-glass-heavy: rgba(255, 255, 255, 0.85);
   --bg-card: rgba(255, 255, 255, 0.6);
@@ -29,6 +38,15 @@ export const sidebarStyles = `
 }
 
 .aha-root[data-theme="dark"] {
+  --glass-bg: linear-gradient(135deg, rgba(62, 66, 78, 0.72) 0%, rgba(30, 33, 41, 0.5) 100%);
+  --glass-bg-strong: linear-gradient(135deg, rgba(78, 83, 98, 0.82) 0%, rgba(33, 36, 45, 0.62) 100%);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.32),
+    0 1px 3px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.05);
+  --glass-highlight: linear-gradient(105deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 22%, rgba(255,255,255,0) 40%);
   --bg-glass: rgba(30, 30, 32, 0.65);
   --bg-glass-heavy: rgba(30, 30, 32, 0.85);
   --bg-card: rgba(44, 44, 46, 0.6);
@@ -58,8 +76,8 @@ export const sidebarStyles = `
 
 #ahaflow-container {
   position: fixed;
-  right: 24px;
-  top: 50%;
+  right: 15px;
+  top: 52%;
   transform: translateY(-50%);
   z-index: 999999;
   display: flex;
@@ -67,14 +85,41 @@ export const sidebarStyles = `
   gap: 16px;
 }
 
+#ahaflow-container::before,
+#ahaflow-container::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(46px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+#ahaflow-container::before {
+  width: 140px;
+  height: 140px;
+  right: 140px;
+  top: 6%;
+  background: rgba(150, 220, 255, 0.22);
+}
+
+#ahaflow-container::after {
+  width: 180px;
+  height: 180px;
+  right: 220px;
+  bottom: 8%;
+  background: rgba(255, 210, 120, 0.16);
+}
+
 .aha-trigger {
   width: 48px;
   height: 48px;
   border-radius: 24px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 0.5px solid var(--border-highlight);
-  box-shadow: var(--shadow-base), 0 0 20px var(--brand-glow);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), 0 0 20px var(--brand-glow);
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -91,18 +136,17 @@ export const sidebarStyles = `
 .aha-trigger::before {
   content: '';
   position: absolute;
-  inset: -2px;
-  background: var(--brand-gradient);
+  inset: 0;
+  background: var(--glass-highlight);
   z-index: 0;
-  opacity: 0.8;
-  animation: aha-spin 4s linear infinite;
+  opacity: 1;
   border-radius: 50%;
 }
 
 .aha-trigger-inner {
   position: absolute;
   inset: 2px;
-  background: var(--bg-glass);
+  background: linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.08));
   border-radius: 50%;
   z-index: 1;
   display: flex;
@@ -120,11 +164,12 @@ export const sidebarStyles = `
   width: 380px;
   height: 85vh;
   max-height: 800px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(30px) saturate(200%);
-  border: 0.5px solid var(--border-color);
+  background: var(--glass-bg);
+  backdrop-filter: blur(30px) saturate(185%);
+  -webkit-backdrop-filter: blur(30px) saturate(185%);
+  border: 1px solid var(--glass-border);
   border-radius: 24px;
-  box-shadow: var(--shadow-base);
+  box-shadow: var(--glass-shadow);
   display: flex;
   flex-direction: column;
   opacity: 0;
@@ -133,6 +178,14 @@ export const sidebarStyles = `
   transition: var(--transition-spring);
   overflow: hidden;
   position: relative;
+}
+
+.aha-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-highlight);
+  pointer-events: none;
 }
 
 #ahaflow-container.is-open .aha-panel {
@@ -177,8 +230,8 @@ export const sidebarStyles = `
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  border: none;
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--glass-border) 84%, transparent);
+  background: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08));
   color: var(--text-sub);
   cursor: pointer;
   transition: var(--transition-smooth);
@@ -188,12 +241,20 @@ export const sidebarStyles = `
 }
 
 .icon-btn:hover {
-  background: var(--bg-hover);
+  background: linear-gradient(180deg, rgba(255,255,255,0.44), rgba(255,255,255,0.14));
   color: var(--text-main);
 }
 
+.icon-btn.is-active {
+  color: var(--pill-glow-purple);
+  border-color: color-mix(in srgb, var(--pill-glow-purple) 35%, var(--glass-border));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.34), 0 6px 14px rgba(191, 90, 242, 0.12);
+}
+
 .aha-segmented {
-  background: var(--bg-hover);
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+  border: 1px solid color-mix(in srgb, var(--glass-border) 72%, transparent);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.26);
   border-radius: 12px;
   padding: 4px;
   display: flex;
@@ -222,9 +283,10 @@ export const sidebarStyles = `
   top: 4px;
   bottom: 4px;
   width: calc(50% - 4px);
-  background: var(--bg-glass-heavy);
+  background: var(--glass-bg-strong);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid color-mix(in srgb, var(--glass-border) 70%, transparent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.45);
   z-index: 0;
   transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -326,8 +388,8 @@ export const sidebarStyles = `
 }
 
 .node-card {
-  background: var(--bg-card);
-  border: 0.5px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(255,255,255,0.44), rgba(255,255,255,0.18));
+  border: 1px solid color-mix(in srgb, var(--glass-border) 72%, transparent);
   border-radius: 16px;
   padding: 14px;
   font-size: 13px;
@@ -380,8 +442,8 @@ export const sidebarStyles = `
 }
 
 .action-btn {
-  background: var(--bg-card);
-  border: 0.5px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.16));
+  border: 1px solid color-mix(in srgb, var(--glass-border) 68%, transparent);
   border-radius: 16px;
   padding: 16px 12px;
   text-align: left;
@@ -393,7 +455,7 @@ export const sidebarStyles = `
 }
 
 .action-btn:hover {
-  background: var(--bg-hover);
+  background: linear-gradient(135deg, rgba(255,255,255,0.52), rgba(255,255,255,0.22));
   border-color: var(--border-highlight);
   transform: translateY(-2px);
 }
@@ -402,7 +464,9 @@ export const sidebarStyles = `
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: var(--bg-glass-heavy);
+  background: linear-gradient(180deg, rgba(255,255,255,0.54), rgba(255,255,255,0.16));
+  border: 1px solid color-mix(in srgb, var(--glass-border) 80%, transparent);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -437,8 +501,8 @@ export const sidebarStyles = `
 }
 
 .aha-persona-item {
-  background: var(--bg-card);
-  border: 0.5px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(255,255,255,0.42), rgba(255,255,255,0.16));
+  border: 1px solid color-mix(in srgb, var(--glass-border) 68%, transparent);
   border-radius: 14px;
   padding: 12px 14px;
   font-size: 13px;
@@ -451,7 +515,7 @@ export const sidebarStyles = `
 }
 
 .aha-persona-item:hover {
-  background: var(--bg-hover);
+  background: linear-gradient(135deg, rgba(255,255,255,0.54), rgba(255,255,255,0.2));
   border-color: var(--border-highlight);
 }
 
@@ -474,20 +538,24 @@ export const sidebarStyles = `
 
 .persona-action {
   border: 0;
-  background: transparent;
+  background: color-mix(in srgb, var(--bg-card) 80%, transparent);
   color: var(--text-sub);
   width: 26px;
   height: 26px;
-  border-radius: 8px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s linear, color 0.2s linear;
+  border: 1px solid color-mix(in srgb, var(--border-color) 88%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: background 0.22s ease, color 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
 }
 
 .persona-action:hover {
-  background: var(--bg-hover);
+  background: color-mix(in srgb, var(--bg-hover) 86%, white 8%);
   color: var(--text-main);
+  border-color: var(--border-highlight);
+  transform: translateY(-1px);
 }
 
 .persona-action.delete {
@@ -522,15 +590,16 @@ export const sidebarStyles = `
   top: 40px;
   left: 50%;
   transform: translate(-50%, -20px);
-  background: var(--bg-glass-heavy);
-  backdrop-filter: blur(20px);
-  border: 0.5px solid var(--border-color);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-main);
-  box-shadow: var(--shadow-base);
+  box-shadow: var(--glass-shadow);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -548,25 +617,46 @@ export const sidebarStyles = `
 .aha-settings-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(8, 10, 18, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000000;
+  opacity: 0;
+  transition: var(--transition-spring);
+}
+
+.aha-settings-modal.is-closing {
+  opacity: 0;
 }
 
 .aha-settings-panel {
   width: min(420px, 92vw);
   max-height: 80vh;
-  background: var(--bg-glass);
-  border: 0.5px solid var(--border-color);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
   border-radius: 24px;
-  box-shadow: var(--shadow-base);
-  backdrop-filter: blur(30px) saturate(180%);
-  padding: 20px;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(34px) saturate(185%);
+  -webkit-backdrop-filter: blur(34px) saturate(185%);
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  opacity: 0;
+  transform: translateX(40px) scale(0.95);
+  pointer-events: none;
+  transition: var(--transition-spring);
+}
+
+.aha-settings-modal.is-open {
+  opacity: 1;
+}
+
+.aha-settings-panel.is-open {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
 }
 
 .aha-input,
@@ -659,10 +749,10 @@ export const sidebarStyles = `
    ========================================= */
 .ahaflow-sidebar {
   position: fixed;
-  right: 24px;
-  top: 50%;
+  right: 15px;
+  top: 52%;
   transform: translateY(-50%);
-  width: 40px;
+  width: 35px;
   height: 80vh;
   min-height: 440px;
   background: var(--sidebar-bg);
@@ -857,9 +947,10 @@ export const sidebarStyles = `
   right: 40px;
   top: 50%;
   transform: translateY(-50%) translateX(5px);
-  background: var(--peek-bg);
-  backdrop-filter: blur(15px);
-  border: 1px solid var(--border-highlight);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border);
   border-radius: 14px;
   padding: 12px 16px;
   width: max-content;
@@ -868,7 +959,10 @@ export const sidebarStyles = `
   opacity: 0;
   pointer-events: none;
   transition: var(--spring-morph);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.02),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95);
   color: var(--text-main);
   z-index: 20;
   line-height: 1.5;
@@ -928,8 +1022,8 @@ export const sidebarStyles = `
   position: absolute;
   left: 0;
   bottom: 0;
-  background: var(--pill-bg);
-  border: 1px solid var(--pill-border);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -944,7 +1038,9 @@ export const sidebarStyles = `
   pointer-events: none;
   transform: scale(0.8) translateX(10px);
   transition: var(--spring-pop);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  box-shadow: var(--glass-shadow);
 }
 
 .aha-pill-anchor.is-visible .aha-pill-trigger,
@@ -957,7 +1053,7 @@ export const sidebarStyles = `
 .aha-pill-trigger:hover {
   width: 90px;
   border-color: var(--pill-glow-purple);
-  box-shadow: 0 4px 15px rgba(191, 90, 242, 0.2);
+  box-shadow: var(--glass-shadow), 0 4px 15px rgba(191, 90, 242, 0.14);
 }
 
 .aha-pill-icon {
@@ -966,6 +1062,7 @@ export const sidebarStyles = `
   color: var(--text-main);
   flex-shrink: 0;
   transition: color 0.2s;
+  filter: drop-shadow(0 1px 1px rgba(255,255,255,0.35));
 }
 
 .aha-pill-trigger:hover .aha-pill-icon {
@@ -988,36 +1085,69 @@ export const sidebarStyles = `
 .aha-role-menu {
   position: absolute;
   left: 44px;
-  bottom: -2px;
-  width: 220px;
-  background: color-mix(in srgb, var(--pill-menu-bg) 92%, transparent);
-  backdrop-filter: blur(30px) saturate(200%);
-  border: 1px solid var(--pill-menu-border);
-  border-radius: 16px;
-  box-shadow: 0 16px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
-  padding: 8px;
+  bottom: -4px;
+  width: 236px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(24px) saturate(185%);
+  -webkit-backdrop-filter: blur(24px) saturate(185%);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--glass-shadow);
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   opacity: 0;
-  transform: translateX(-6px);
+  transform: translateX(-10px) scale(0.96);
   pointer-events: none;
-  transition: all 0.2s linear;
+  transition: opacity 0.18s ease, transform 0.2s ease, box-shadow 0.2s ease;
   transform-origin: left center;
+  overflow: hidden;
 }
 
 .aha-pill-anchor.menu-open .aha-role-menu {
   opacity: 1;
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
   pointer-events: auto;
+}
+
+.aha-role-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 2px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .aha-role-menu-title {
   font-size: 11px;
-  color: #666;
+  color: color-mix(in srgb, var(--text-sub) 88%, white);
   font-weight: 600;
   text-transform: uppercase;
-  padding: 4px 8px 8px;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+}
+
+.aha-role-menu-add {
+  width: 24px;
+  height: 24px;
+  border: 1px solid color-mix(in srgb, var(--glass-border) 84%, transparent);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.08));
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.42);
+  transition: var(--transition-smooth);
+}
+
+.aha-role-menu-add:hover {
+  transform: scale(1.06);
+  border-color: var(--pill-glow-purple);
+  color: var(--pill-glow-purple);
 }
 
 .aha-role-item {
@@ -1025,16 +1155,28 @@ export const sidebarStyles = `
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   transition: var(--transition-smooth);
-  background: transparent;
-  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
 }
 
 .aha-role-item:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateX(4px) scale(1.01);
+}
+
+.aha-role-item:hover .aha-role-title {
+  color: var(--pill-glow-purple);
+}
+
+.aha-role-item:hover .aha-role-icon {
+  transform: scale(1.08);
+  box-shadow: 0 10px 18px rgba(191, 90, 242, 0.18);
 }
 
 .aha-role-icon {
@@ -1046,6 +1188,7 @@ export const sidebarStyles = `
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, background 0.28s ease;
 }
 
 .aha-role-item:nth-child(2) .aha-role-icon {
@@ -1068,5 +1211,146 @@ export const sidebarStyles = `
   font-size: 11px;
   color: var(--text-sub);
   margin-top: 2px;
+}
+
+.aha-root[data-liquid-glass="off"] #ahaflow-container::before,
+.aha-root[data-liquid-glass="off"] #ahaflow-container::after,
+.aha-root[data-liquid-glass="off"] .aha-panel::before {
+  display: none;
+}
+
+.aha-root[data-liquid-glass="off"] .aha-trigger {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 0.5px solid var(--border-highlight);
+  box-shadow: var(--shadow-base), 0 0 20px var(--brand-glow);
+}
+
+.aha-root[data-liquid-glass="off"] .aha-trigger::before {
+  inset: -2px;
+  background: var(--brand-gradient);
+  opacity: 0.8;
+}
+
+.aha-root[data-liquid-glass="off"] .aha-trigger-inner {
+  background: var(--bg-glass);
+}
+
+.aha-root[data-liquid-glass="off"] .aha-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border: 0.5px solid var(--border-color);
+  box-shadow: var(--shadow-base);
+}
+
+.aha-root[data-liquid-glass="off"] .icon-btn {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.aha-root[data-liquid-glass="off"] .icon-btn:hover {
+  background: var(--bg-hover);
+}
+
+.aha-root[data-liquid-glass="off"] .icon-btn.is-active {
+  background: var(--bg-hover);
+  border: 0.5px solid var(--border-color);
+  box-shadow: none;
+}
+
+.aha-root[data-liquid-glass="off"] .aha-segmented {
+  background: var(--bg-hover);
+  border: none;
+  box-shadow: none;
+}
+
+.aha-root[data-liquid-glass="off"] .aha-seg-indicator {
+  background: var(--bg-glass-heavy);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.aha-root[data-liquid-glass="off"] .node-card,
+.aha-root[data-liquid-glass="off"] .action-btn,
+.aha-root[data-liquid-glass="off"] .aha-persona-item {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-color);
+}
+
+.aha-root[data-liquid-glass="off"] .action-btn:hover,
+.aha-root[data-liquid-glass="off"] .aha-persona-item:hover {
+  background: var(--bg-hover);
+}
+
+.aha-root[data-liquid-glass="off"] .action-icon {
+  background: var(--bg-glass-heavy);
+  border: none;
+  box-shadow: none;
+}
+
+.aha-root[data-liquid-glass="off"] .persona-action {
+  background: color-mix(in srgb, var(--bg-card) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-color) 88%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.aha-root[data-liquid-glass="off"] #aha-toast {
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--border-color);
+  box-shadow: var(--shadow-base);
+}
+
+.aha-root[data-liquid-glass="off"] .aha-settings-panel {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08)),
+    color-mix(in srgb, var(--bg-glass-heavy) 96%, white 4%);
+  border: 1px solid color-mix(in srgb, var(--border-highlight) 72%, white 10%);
+  box-shadow:
+    0 24px 46px rgba(0, 0, 0, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255,255,255,0.24);
+}
+
+.aha-root[data-liquid-glass="off"] .peek {
+  background: var(--peek-bg);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--border-highlight);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.28);
+}
+
+.aha-root[data-liquid-glass="off"] .aha-pill-trigger {
+  background: var(--pill-bg);
+  border: 1px solid var(--pill-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: none;
+}
+
+.aha-root[data-liquid-glass="off"] .aha-pill-trigger:hover {
+  box-shadow: 0 4px 15px rgba(191, 90, 242, 0.2);
+}
+
+.aha-root[data-liquid-glass="off"] .aha-role-menu {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08)),
+    color-mix(in srgb, var(--pill-menu-bg) 78%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 18px 44px rgba(6, 10, 22, 0.28),
+    0 6px 20px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.aha-root[data-liquid-glass="off"] .aha-role-menu-add {
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
 }
 `;

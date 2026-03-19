@@ -2,22 +2,19 @@ import { BaseSiteAdapter } from './BaseSiteAdapter';
 import type { ChatElement, ChatMessage, ChatSource } from './types';
 
 export class KimiAdapter extends BaseSiteAdapter {
+  private readonly messageSelectors = [
+    'main [data-message-author-role]',
+    'main [data-role]',
+    'main [role="listitem"]',
+    'main article'
+  ];
+
   getSource(): ChatSource {
     return 'Kimi';
   }
 
   getQueryInput(): HTMLElement | null {
-    const textarea = document.querySelector('textarea[aria-label], textarea[placeholder]');
-    if (textarea) return textarea as HTMLElement;
-
-    const editable = Array.from(document.querySelectorAll('[contenteditable="true"]'))
-      .map((el) => el as HTMLElement)
-      .find((el) => {
-        const label = el.getAttribute('aria-label') || '';
-        return /message|prompt|send|输入|消息/i.test(label);
-      });
-
-    return editable || null;
+    return this.getFirstMatchingInput(undefined, /message|prompt|kimi|输入|消息|提问/i);
   }
 
   getChatContainer(): Element | null {
@@ -25,44 +22,13 @@ export class KimiAdapter extends BaseSiteAdapter {
   }
 
   getChatHistory(): ChatMessage[] {
-    const listItems = this.pickBySelectors([
-      'main [role="listitem"]',
-      'main article',
-      'main [data-message-author-role]'
-    ]);
-
-    const messages = listItems
-      .map((node) => {
-        const roleAttr = node.getAttribute('data-message-author-role');
-        const aria = node.getAttribute('aria-label') || '';
-        let role: ChatMessage['role'] = 'assistant';
-        if (roleAttr === 'user' || /you|user|你/i.test(aria)) role = 'user';
-        if (/assistant|kimi|model/i.test(aria)) role = 'assistant';
-        const content = this.getTextFromNode(node);
-        return { role, content };
-      })
-      .filter((msg) => msg.content.length > 0);
-
-    return messages;
+    return this.toHistory(this.getChatMessageElements());
   }
 
   getChatMessageElements(): ChatElement[] {
-    const listItems = this.pickBySelectors([
-      'main [role="listitem"]',
-      'main article',
-      'main [data-message-author-role]'
-    ]);
-
-    return listItems
-      .map((node) => {
-        const roleAttr = node.getAttribute('data-message-author-role');
-        const aria = node.getAttribute('aria-label') || '';
-        let role: ChatElement['role'] = 'assistant';
-        if (roleAttr === 'user' || /you|user|你/i.test(aria)) role = 'user';
-        if (/assistant|kimi|model/i.test(aria)) role = 'assistant';
-        const content = this.getTextFromNode(node);
-        return { role, content, element: node };
-      })
-      .filter((msg) => msg.content.length > 0);
+    return this.collectMessages(this.messageSelectors, {
+      sourceHints: ['kimi', 'assistant'],
+      contentSelectors: ['.markdown', '.segment-content', '[dir="auto"]']
+    });
   }
 }

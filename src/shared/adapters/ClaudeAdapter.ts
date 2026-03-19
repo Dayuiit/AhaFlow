@@ -1,28 +1,36 @@
 import { BaseSiteAdapter } from './BaseSiteAdapter';
 import type { ChatElement, ChatMessage, ChatSource } from './types';
 
-export class ChatGPTAdapter extends BaseSiteAdapter {
+export class ClaudeAdapter extends BaseSiteAdapter {
   private readonly messageSelectors = [
-    '[data-message-author-role]',
+    'main [data-testid="user-message"], main [data-testid="assistant-message"]',
+    'main [data-test-render-count] article',
     'main article',
-    'main [role="listitem"]'
+    'main [role="listitem"]',
+    '[role="main"] article'
   ];
 
-  private readonly contentSelectors = ['.markdown', '[data-message-author-role] [dir="auto"]', '[dir="auto"]'];
+  private readonly contentSelectors = [
+    '[data-testid="message-text"]',
+    '.prose',
+    '.font-claude-message',
+    '[dir="auto"]'
+  ];
 
   getSource(): ChatSource {
-    return 'ChatGPT';
+    return 'Claude';
   }
 
   getQueryInput(): HTMLElement | null {
     return this.getFirstMatchingInput(
       [
-        'form textarea',
+        'fieldset textarea',
         'textarea[aria-label]',
         'textarea[placeholder]',
-        '[contenteditable="true"][role="textbox"]'
+        '[contenteditable="true"][role="textbox"]',
+        '[contenteditable="true"]'
       ],
-      /message|chatgpt|prompt|send|输入|消息/i
+      /message|claude|chat|prompt|输入|消息|提问/i
     );
   }
 
@@ -32,7 +40,7 @@ export class ChatGPTAdapter extends BaseSiteAdapter {
 
   getChatMessageElements(): ChatElement[] {
     return this.collectMessages(this.messageSelectors, {
-      sourceHints: ['chatgpt', 'assistant'],
+      sourceHints: ['claude', 'assistant'],
       contentSelectors: this.contentSelectors
     });
   }

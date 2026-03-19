@@ -15,6 +15,7 @@ type Prefs = {
   focusMode: boolean;
   language: LanguageCode;
   theme: 'light' | 'dark';
+  liquidGlass: boolean;
 };
 
 type TimelineItem = {
@@ -25,10 +26,15 @@ type TimelineItem = {
   weight: number;
 };
 
+function getDefaultTheme(): Prefs['theme'] {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 const defaultPrefs: Prefs = {
   focusMode: false,
   language: getDefaultLanguage(),
-  theme: 'dark'
+  theme: getDefaultTheme(),
+  liquidGlass: true
 };
 
 let cachedPersonas: Persona[] = [];
@@ -86,6 +92,8 @@ function applyFocusMode(adapter: BaseSiteAdapter, enabled: boolean) {
   let css = '';
   if (host.includes('openai.com') || host.includes('chatgpt.com')) {
     css = `nav[aria-label], aside { display: none !important; }`;
+  } else if (host.includes('claude.ai')) {
+    css = `aside, nav, [data-testid="chat-history"], [data-testid="conversation-sidebar"] { display: none !important; }`;
   } else if (host.includes('gemini.google.com')) {
     css = `aside, [role="navigation"], nav { display: none !important; }`;
   } else if (host.includes('kimi')) {
@@ -125,19 +133,20 @@ function Sidebar() {
   const [activeView, setActiveView] = useState<'flow' | 'actions'>('flow');
   const [toast, setToast] = useState<string>('');
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsClosing, setSettingsClosing] = useState(false);
   const [personaName, setPersonaName] = useState('');
   const [personaPrompt, setPersonaPrompt] = useState('');
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [pillVisible, setPillVisible] = useState(false);
   const [pillOpen, setPillOpen] = useState(false);
-  const [pillPinned, setPillPinned] = useState(false);
   const [pillPos, setPillPos] = useState({ left: 0, top: 0 });
   const [editingPersonaId, setEditingPersonaId] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const debugPeek = false;
   const toastTimer = useRef<number | null>(null);
   const pillRef = useRef<HTMLDivElement | null>(null);
+  const pillInteractingRef = useRef(false);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -171,6 +180,23 @@ function Sidebar() {
     chrome.storage.onChanged.addListener(onChange);
     return () => chrome.storage.onChanged.removeListener(onChange);
   }, [adapter]);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const syncTheme = () => {
+      chrome.storage.local.get(['prefs'], (result) => {
+        const prefsFromStorage = result?.prefs as Partial<Prefs> | undefined;
+        if (prefsFromStorage?.theme) return;
+        setPrefs((prev) => ({ ...prev, theme: media.matches ? 'dark' : 'light' }));
+      });
+    };
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', syncTheme);
+      return () => media.removeEventListener('change', syncTheme);
+    }
+    media.addListener(syncTheme);
+    return () => media.removeListener(syncTheme);
+  }, []);
 
   useEffect(() => {
     if (!adapter) return;
@@ -237,6 +263,8 @@ function Sidebar() {
     const handleFocusOut = (event: FocusEvent) => {
       const target = input();
       if (!target) return;
+      if (pillInteractingRef.current) return;
+      if (pillRef.current?.contains(event.relatedTarget as Node)) return;
       if (event.target === target || target.contains(event.target as Node)) {
         if (!pillOpen) setPillVisible(false);
       }
@@ -245,7 +273,6 @@ function Sidebar() {
     const handleGlobalMouseDown = (event: MouseEvent) => {
       if (pillRef.current && pillRef.current.contains(event.target as Node)) return;
       setPillOpen(false);
-      setPillPinned(false);
     };
 
     const handleViewportUpdate = () => {
@@ -303,6 +330,20 @@ function Sidebar() {
     setPersonaPrompt('');
   };
 
+  const openSettingsPanel = () => {
+    setSettingsClosing(false);
+    setShowSettings(true);
+  };
+
+  const closeSettingsPanel = (resetEditor = true) => {
+    setSettingsClosing(true);
+    window.setTimeout(() => {
+      setShowSettings(false);
+      setSettingsClosing(false);
+      if (resetEditor) resetPersonaEditor();
+    }, 340);
+  };
+
   const injectSummary = (text: string) => {
     injectText(adapter, text);
     const msg = text.length > 60 ? `${text.slice(0, 60)}…` : text;
@@ -351,6 +392,12 @@ function Sidebar() {
     await savePrefs(next);
   };
 
+  const toggleLiquidGlass = async () => {
+    const next = { ...prefs, liquidGlass: !prefs.liquidGlass };
+    setPrefs(next);
+    await savePrefs(next);
+  };
+
   const toggleFocus = async () => {
     const next = { ...prefs, focusMode: !prefs.focusMode };
     setPrefs(next);
@@ -386,6 +433,7 @@ function Sidebar() {
     await savePersonas(next);
     setPersonas(next);
     resetPersonaEditor();
+    closeSettingsPanel(false);
   };
 
   const removePersona = async (id: string) => {
@@ -420,7 +468,7 @@ function Sidebar() {
     setEditingPersonaId(persona.id);
     setPersonaName(persona.name);
     setPersonaPrompt(persona.prompt);
-    setShowSettings(true);
+    openSettingsPanel();
   };
 
   const latestPins = useMemo(() => {
@@ -499,7 +547,7 @@ function Sidebar() {
   };
 
   return (
-    <div className="aha-root" data-theme={prefs.theme}>
+    <div className="aha-root" data-theme={prefs.theme} data-liquid-glass={prefs.liquidGlass ? 'on' : 'off'}>
       <svg style={{ width: 0, height: 0, position: 'absolute' }}>
         <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#00c6ff" />
@@ -522,6 +570,16 @@ function Sidebar() {
                   ) : (
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
                   )}
+                </button>
+                <button
+                  className={`icon-btn ${prefs.liquidGlass ? 'is-active' : ''}`}
+                  onClick={toggleLiquidGlass}
+                  title={t('liquidGlass')}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3c4.2 0 7 2.8 7 7 0 5.5-5 9-7 11-2-2-7-5.5-7-11 0-4.2 2.8-7 7-7Z" />
+                    <path d="M9 10.5c.9-1.8 2.3-2.7 4.2-3" />
+                  </svg>
                 </button>
                 <button className="icon-btn" onClick={() => setIsOpen(false)} title={t('collapse')}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
@@ -650,7 +708,7 @@ function Sidebar() {
                   className="aha-icon-plus"
                   onClick={() => {
                     resetPersonaEditor();
-                    setShowSettings(true);
+                    openSettingsPanel();
                   }}
                   title={t('settings')}
                 >
@@ -691,9 +749,10 @@ function Sidebar() {
                             movePersonaToTop(persona.id);
                           }}
                         >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M8 6l4-4 4 4" />
-                            <path d="M12 2v12" />
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M7 6.5h10" />
+                            <path d="M12 17V8" />
+                            <path d="M9.5 10.5 12 8l2.5 2.5" />
                           </svg>
                         </button>
                         <button
@@ -704,8 +763,8 @@ function Sidebar() {
                             movePersona(persona.id, 'up');
                           }}
                         >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M8 14l4-4 4 4" />
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M8 14.5 12 10.5 16 14.5" />
                           </svg>
                         </button>
                         <button
@@ -716,8 +775,8 @@ function Sidebar() {
                             movePersona(persona.id, 'down');
                           }}
                         >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M8 10l4 4 4-4" />
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M8 9.5 12 13.5 16 9.5" />
                           </svg>
                         </button>
                         <button
@@ -838,41 +897,74 @@ function Sidebar() {
         ref={pillRef}
         className={`aha-pill-anchor ${showPill ? 'is-visible' : ''} ${pillOpen ? 'menu-open' : ''}`}
         style={{ left: `${pillPos.left}px`, top: `${pillPos.top}px` }}
-        onMouseEnter={() => {
-          if (!pillPinned) setPillOpen(true);
-        }}
-        onMouseLeave={() => {
-          if (!pillPinned) setPillOpen(false);
-        }}
       >
         <div
           className="aha-pill-trigger"
           onMouseDown={(event) => {
             event.preventDefault();
-            setPillOpen(true);
-            setPillPinned(true);
+            event.stopPropagation();
+            pillInteractingRef.current = true;
+            window.setTimeout(() => {
+              pillInteractingRef.current = false;
+            }, 0);
+          }}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setPillOpen((open) => !open);
             setPillVisible(true);
           }}
           title={t('rolePrompts')}
         >
-          <svg className="aha-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="aha-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18h6" />
-            <path d="M10 22h4" />
-            <path d="M12 2a7 7 0 0 0-4 12c.7.7 1 1.3 1 2h6c0-.7.3-1.3 1-2a7 7 0 0 0-4-12z" />
+            <path d="M10 21h4" />
+            <path d="M8.8 14.8C7.7 13.9 7 12.5 7 11a5 5 0 1 1 10 0c0 1.5-.7 2.9-1.8 3.8-.7.6-1.2 1.2-1.2 2.2h-4c0-1-.5-1.6-1.2-2.2Z" />
+            <path d="M12 4.5V6" />
+            <path d="M8.6 7.1 9.5 8" />
+            <path d="M15.4 7.1 14.5 8" />
           </svg>
           <span className="aha-pill-text">{t('rolePrompts')}</span>
         </div>
         <div className="aha-role-menu">
-          <div className="aha-role-menu-title">{t('rolePrompts')}</div>
+          <div className="aha-role-menu-header">
+            <div className="aha-role-menu-title">{t('rolePrompts')}</div>
+            <button
+              className="aha-role-menu-add"
+              title={t('managePersonas')}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+              }}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setPillOpen(false);
+                resetPersonaEditor();
+                openSettingsPanel();
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+            </button>
+          </div>
           {personas.length ? (
             personas.map((persona) => (
               <div
                 className="aha-role-item"
                 key={`pill-${persona.id}`}
-                onMouseDown={(event) => event.preventDefault()}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  pillInteractingRef.current = true;
+                  window.setTimeout(() => {
+                    pillInteractingRef.current = false;
+                  }, 0);
+                }}
                 onClick={() => {
                   setPillOpen(false);
-                  setPillPinned(false);
                   appendText(adapter, persona.prompt);
                   focusInputEnd();
                   flashInput();
@@ -913,13 +1005,15 @@ function Sidebar() {
 
       {showSettings ? (
         <div
-          className="aha-settings-modal"
+          className={`aha-settings-modal ${settingsClosing ? 'is-closing' : 'is-open'}`}
           onClick={() => {
-            setShowSettings(false);
-            resetPersonaEditor();
+            closeSettingsPanel();
           }}
         >
-          <div className="aha-settings-panel" onClick={(event) => event.stopPropagation()}>
+          <div
+            className={`aha-settings-panel ${settingsClosing ? 'is-closing' : 'is-open'}`}
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="aha-top-bar">
               <div className="aha-logo">
                 <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -928,8 +1022,7 @@ function Sidebar() {
               <button
                 className="icon-btn"
                 onClick={() => {
-                  setShowSettings(false);
-                  resetPersonaEditor();
+                  closeSettingsPanel();
                 }}
                 title={t('close')}
               >
@@ -960,8 +1053,7 @@ function Sidebar() {
                 className="btn-quote"
                 style={{ position: 'static', opacity: 1, transform: 'none' }}
                 onClick={() => {
-                  setShowSettings(false);
-                  resetPersonaEditor();
+                  closeSettingsPanel();
                 }}
               >
                 {t('close')}

@@ -1,4 +1,5 @@
 import { ChatGPTAdapter } from './ChatGPTAdapter';
+import { ClaudeAdapter } from './ClaudeAdapter';
 import { GeminiAdapter } from './GeminiAdapter';
 import { KimiAdapter } from './KimiAdapter';
 import { QwenAdapter } from './QwenAdapter';
@@ -9,6 +10,9 @@ import type { BaseSiteAdapter } from './BaseSiteAdapter';
 export function createAdapterForHost(host: string): BaseSiteAdapter | null {
   if (host.includes('openai.com') || host.includes('chatgpt.com') || host.includes('chat.openai.com')) {
     return new ChatGPTAdapter();
+  }
+  if (host.includes('claude.ai')) {
+    return new ClaudeAdapter();
   }
   if (host.includes('gemini.google.com')) {
     return new GeminiAdapter();

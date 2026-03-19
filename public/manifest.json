@@ -13,6 +13,7 @@
   "host_permissions": [
     "https://chat.openai.com/*",
     "https://chatgpt.com/*",
+    "https://claude.ai/*",
     "https://gemini.google.com/*",
     "https://kimi.moonshot.cn/*",
     "https://kimi.ai/*",
@@ -30,6 +31,7 @@
       "matches": [
         "https://chat.openai.com/*",
         "https://chatgpt.com/*",
+        "https://claude.ai/*",
         "https://gemini.google.com/*",
         "https://kimi.moonshot.cn/*",
         "https://kimi.ai/*",

@@ -17,6 +17,7 @@ export type I18nKey =
   | 'actionFocusDesc'
   | 'actionLanguage'
   | 'actionLanguageDesc'
+  | 'liquidGlass'
   | 'rolePrompts'
   | 'roleEmpty'
   | 'justNow'
@@ -72,6 +73,7 @@ const ZH: Dict = {
   actionFocusDesc: '一键隐藏干扰元素，保留对话核心',
   actionLanguage: '切换语言',
   actionLanguageDesc: '在中英文界面间快速切换',
+  liquidGlass: '液态玻璃',
   rolePrompts: '预设角色',
   roleEmpty: '暂无角色，可在设置中添加。',
   justNow: '刚刚',
@@ -126,6 +128,7 @@ const EN: Dict = {
   actionFocusDesc: 'Hide distractions and keep the core conversation',
   actionLanguage: 'Switch Language',
   actionLanguageDesc: 'Toggle between Chinese and English UI',
+  liquidGlass: 'Liquid Glass',
   rolePrompts: 'Role Prompts',
   roleEmpty: 'No personas yet. Add in settings.',
   justNow: 'Just now',

@@ -1,4 +1,4 @@
-export type ChatSource = 'ChatGPT' | 'Gemini' | 'Kimi' | 'Qwen' | 'Doubao' | 'DeepSeek';
+export type ChatSource = 'ChatGPT' | 'Claude' | 'Gemini' | 'Kimi' | 'Qwen' | 'Doubao' | 'DeepSeek';
 
 export type ChatMessage = {
   role: 'user' | 'assistant' | 'system';
